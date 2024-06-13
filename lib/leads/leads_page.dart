@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'leads.dart';
+import 'lead.dart';
+import 'leads_service.dart';
 
 class LeadsPage extends StatefulWidget {
   const LeadsPage({super.key, required this.title});
@@ -14,8 +15,8 @@ class LeadsPage extends StatefulWidget {
 }
 
 class _LeadsPageState extends State<LeadsPage> {
-  List<dynamic> _leads = [];
-  List<dynamic> _filteredLeads = [];
+  List<Lead> _leads = [];
+  List<Lead> _filteredLeads = [];
   bool _isLoading = true;
 
   @override
@@ -25,25 +26,16 @@ class _LeadsPageState extends State<LeadsPage> {
   }
 
   Future<void> _fetchLeads() async {
-    final response = await http.post(
-      Uri.parse('https://api.thenotary.app/lead/getLeads'),
-      body: {
-        'notaryId': '6668baaed6a4670012a6e406',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final jsonData = response.body;
-      final parsedJson = json.decode(jsonData);
-      final leads = parsedJson['leads'];
-
+    try {
+      List<Lead> leads = await LeadsService.fetchLeads();
       setState(() {
-        _leads = leads.map((lead) => Lead.fromJson(lead)).toList();
-        _filteredLeads = _leads;
+        _leads = leads;
+        _filteredLeads = leads;
         _isLoading = false;
       });
-    } else {
-      throw Exception('Failed to load leads');
+    } catch (e) {
+      // Handle error loading leads
+      print('Error fetching leads: $e');
     }
   }
 
